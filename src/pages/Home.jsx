@@ -1,8 +1,9 @@
-import { Suspense, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Suspense, useRef, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Cylinder, Float, Ring, Sphere } from '@react-three/drei';
+import { StoreContext } from '../context/storeContext';
 import '../styles/Home.css';
 
 const Scene = () => {
@@ -139,6 +140,8 @@ const Scene = () => {
 };
 
 const Home = () => {
+  const { isVerified } = useContext(StoreContext);
+  const navigate = useNavigate();
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -147,6 +150,14 @@ const Home = () => {
 
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  const handleStartTest = () => {
+    if (isVerified) {
+      navigate('/instruction');
+    } else {
+      navigate('/auth');
+    }
+  };
 
   return (
     <div className="home" ref={containerRef}>
@@ -178,22 +189,23 @@ const Home = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
           >
-            <Link to="/test">
+            <motion.button 
+              className="primary-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleStartTest}
+            >
+              Start Practice Test
+            </motion.button>
+            <Link to="/about">
               <motion.button 
-                className="primary-button"
+                className="secondary-button"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Start Practice Test
+                Learn More
               </motion.button>
             </Link>
-            <motion.button 
-              className="secondary-button"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Learn More
-            </motion.button>
           </motion.div>
         </div>
 
@@ -287,7 +299,7 @@ const Home = () => {
         <div className="cta-content">
           <h2>Ready to Excel in NATA?</h2>
           <p>Join thousands of successful aspirants who prepared with our platform</p>
-          <Link to="/test">
+          <Link to="/instruction">
             <motion.button 
               className="primary-button"
               whileHover={{ scale: 1.05, boxShadow: "0 20px 30px -10px rgba(59, 130, 246, 0.5)" }}

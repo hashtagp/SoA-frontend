@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Menu, X } from 'lucide-react';
 import logo from '../assets/logo.svg';
@@ -9,6 +9,7 @@ import '../styles/Navbar.css';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const location = useLocation();
 
   return (
     <>
@@ -41,7 +42,7 @@ const Navbar = () => {
           <div className="nav-links-desktop">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/about" className="nav-link">About</Link>
-            <Link to="/test" className="nav-link">Practice Test</Link>
+            <Link to="/instruction" className="nav-link">Practice Test</Link>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -66,7 +67,7 @@ const Navbar = () => {
         >
           <Link to="/" className="mobile-link">Home</Link>
           <Link to="/about" className="mobile-link">About</Link>
-          <Link to="/test" className="mobile-link">Practice Test</Link>
+          <Link to="/instruction" className="mobile-link">Practice Test</Link>
           <button 
             className="mobile-auth-button"
             onClick={() => {
@@ -82,7 +83,10 @@ const Navbar = () => {
       {/* Auth Modal */}
       <AnimatePresence>
         {showAuthModal && (
-          <SignIn onClose={() => setShowAuthModal(false)} />
+          <SignIn 
+            onClose={() => setShowAuthModal(false)} 
+            returnPath={location.pathname}
+          />
         )}
       </AnimatePresence>
     </>

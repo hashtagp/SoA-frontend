@@ -18,6 +18,10 @@ body{
     box-sizing: border-box;
 }
 
+.appmain{
+  margin-top: 50px;
+}
+
 .app {
   min-height: 100vh;
   background: #0f172a;

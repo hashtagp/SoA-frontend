@@ -196,20 +196,6 @@ const Test = () => {
         <div className="question-info">
           Question {currentQuestion + 1} of {questions.length}
         </div>
-        <div className="progress-container">
-          <span className="progress-text">Progress</span>
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{
-                width: `${((currentQuestion + 1) / questions.length) * 100}%`,
-              }}
-            />
-          </div>
-          <span className="progress-percentage">
-            {Math.round(((currentQuestion + 1) / questions.length) * 100)}%
-          </span>
-        </div>
       </div>
 
       <div className="test-layout">

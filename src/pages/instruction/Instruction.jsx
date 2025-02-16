@@ -1,31 +1,21 @@
-import "../style/Instruction.css";
+import "./Instruction.css";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-
-const TestPlatform = () => {
+const Instruction = () => {
   const [isStarting, setIsStarting] = useState(false);
+  const Navigate = useNavigate();
 
   const handleStartTest = () => {
     setIsStarting(true);
-    // Simulate a delay for starting the test
-    setTimeout(() => {
-      console.log("Test Started!");
-    }, 2000);
+    Navigate("/test");
   };
 
   return (
     <div className="test-container">
       <div className="test-box">
         <h1>Welcome to the Test Platform</h1>
-        <p>Ready to test your knowledge?</p>
-        <button 
-          className={`start-button ${isStarting ? "disabled" : ""}`}
-          onClick={handleStartTest}
-          disabled={isStarting}
-        >
-          {isStarting ? "Starting Test..." : "Start Test"}
-        </button>
-
+        
         <div className="instructions">
           <h2>NATA Test Instructions</h2>
           <ul>
@@ -37,9 +27,18 @@ const TestPlatform = () => {
             <li>Click "Start Test" when you are ready.</li>
           </ul>
         </div>
+        <p>Ready to test your knowledge?</p>
+        <button 
+          className={`start-button ${isStarting ? "disabled" : ""}`}
+          onClick={handleStartTest}
+          disabled={isStarting}
+        >
+          {isStarting ? "Starting Test..." : "Start Test"}
+        </button>
+
       </div>
     </div>
   );
 };
 
-export default TestPlatform;
+export default Instruction;

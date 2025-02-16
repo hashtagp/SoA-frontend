@@ -1,0 +1,130 @@
+.about-container {
+  max-width: 1200px;
+  margin: 100px auto 0;
+  padding: 2rem;
+  background: rgba(30, 41, 59, 0.3);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 24px;
+}
+
+.about-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.about-header h1 {
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #94a3b8;
+}
+
+.about-section {
+  margin-bottom: 3rem;
+}
+
+.about-section h2 {
+  color: #e2e8f0;
+  margin-bottom: 1.5rem;
+  font-size: 1.8rem;
+}
+
+.about-section p {
+  line-height: 1.6;
+  color: #94a3b8;
+  font-size: 1.1rem;
+}
+
+.about-section ul {
+  margin-top: 1rem;
+}
+
+.features-section {
+  margin-bottom: 3rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.feature-card {
+  background: rgba(30, 41, 59, 0.4);
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.feature-card h3 {
+  color: #e2e8f0;  /* Updated to match about section heading color */
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+}
+
+.feature-card p {
+  color: #94a3b8;  /* Updated to match about section paragraph color */
+  line-height: 1.6;
+  font-size: 1.1rem;  /* Updated to match about section text size */
+}
+
+.approach-list,
+.benefits-list {
+  list-style-type: none;
+  padding-left: 1.5rem;
+  margin-top: 1rem;
+}
+
+.approach-list li,
+.benefits-list li {
+  color: #94a3b8;
+  margin-bottom: 0.8rem;
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.approach-list li::before,
+.benefits-list li::before {
+  content: "•";
+  color: #3b82f6;
+  position: absolute;
+  left: 0;
+  font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+  .about-header h1 {
+    font-size: 2rem;
+  }
+
+  .about-container {
+    padding: 1rem;
+    margin: 80px 1rem 1rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .approach-list,
+  .benefits-list {
+    padding-left: 0.5rem;
+  }
+}

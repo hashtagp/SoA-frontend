@@ -1,13 +1,20 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { StoreProvider } from './context/storeContext'
+import App from './App'
 import './index.css'
-import App from './App.jsx'
+import axios from 'axios';
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = 'http://localhost:5000';
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <StoreProvider>
+        <App />
+      </StoreProvider>
     </BrowserRouter>
-  </StrictMode>,
+  </React.StrictMode>,
 )

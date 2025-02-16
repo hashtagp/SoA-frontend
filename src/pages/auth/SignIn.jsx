@@ -1,10 +1,84 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '../../styles/SignIn.css';
 
-const SignIn = ({ onClose }) => {
+const SignIn = ({ onClose, returnPath }) => {
   const [isSignIn, setIsSignIn] = useState(true);
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [error, setError] = useState('');
+
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('http://localhost:5000/api/users/login', 
+        {
+          email: formData.email,
+          password: formData.password,
+        },
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      
+      if (response.data) {
+        localStorage.setItem('token', response.data.token);
+        console.log('Login successful', document.cookie); // Debug cookies
+        handleClose();
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || 'Login failed');
+    }
+  };
+
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    
+    try {
+      const response = await axios.post('http://localhost:5000/api/users/register', {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+      
+      if (response.data) {
+        setIsSignIn(true);
+        console.log('Registration successful');
+        console.log(response.data);
+        setError('');
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || 'Registration failed');
+    }
+  };
+
+  const handleClose = () => {
+    onClose();
+    if (returnPath !== '/auth') {
+      navigate(returnPath);
+    }
+  };
 
   return (
     <motion.div 
@@ -40,7 +114,7 @@ const SignIn = ({ onClose }) => {
                 Sign Up
               </button>
             </motion.div>
-            <button className="close-button" onClick={onClose}>×</button>
+            <button className="close-button" onClick={handleClose}>×</button>
           </div>
 
           <motion.div 
@@ -49,22 +123,31 @@ const SignIn = ({ onClose }) => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
+            {error && <div className="error-message">{error}</div>}
             {isSignIn ? (
-              <form className="auth-form" onSubmit={(e) => e.preventDefault()}>
+              <form className="auth-form" onSubmit={handleSignIn}>
                 <div className="form-group">
                   <label>Email</label>
                   <input 
-                    type="email" 
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
                     placeholder="Enter your email"
                     className="form-input"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label>Password</label>
                   <input 
-                    type="password" 
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
                     placeholder="Enter your password"
                     className="form-input"
+                    required
                   />
                 </div>
                 <div className="form-footer">
@@ -81,37 +164,53 @@ const SignIn = ({ onClose }) => {
                 </button>
               </form>
             ) : (
-              <form className="auth-form" onSubmit={(e) => e.preventDefault()}>
+              <form className="auth-form" onSubmit={handleSignUp}>
                 <div className="form-group">
-                  <label>Full Name</label>
+                  <label>User Name</label>
                   <input 
-                    type="text" 
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
                     placeholder="Enter your full name"
                     className="form-input"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label>Email</label>
                   <input 
-                    type="email" 
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
                     placeholder="Enter your email"
                     className="form-input"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label>Password</label>
                   <input 
-                    type="password" 
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
                     placeholder="Create a password"
                     className="form-input"
+                    required
                   />
                 </div>
                 <div className="form-group">
                   <label>Confirm Password</label>
                   <input 
-                    type="password" 
+                    type="password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
                     placeholder="Confirm your password"
                     className="form-input"
+                    required
                   />
                 </div>
                 <button type="submit" className="submit-button">
@@ -120,21 +219,6 @@ const SignIn = ({ onClose }) => {
               </form>
             )}
           </motion.div>
-
-          <div className="auth-divider">
-            <span>or continue with</span>
-          </div>
-
-          <div className="social-auth">
-            <button className="social-button google">
-              <img src="/google-icon.svg" alt="Google" />
-              Google
-            </button>
-            <button className="social-button github">
-              <img src="/github-icon.svg" alt="GitHub" />
-              GitHub
-            </button>
-          </div>
         </div>
 
         <div className="auth-illustration">
