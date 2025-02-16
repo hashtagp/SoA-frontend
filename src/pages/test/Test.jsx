@@ -3,67 +3,41 @@ import { motion } from "framer-motion";
 import { Timer, ArrowLeft, ArrowRight, Send } from "lucide-react";
 import "../../styles/Test.css";
 import Result from "./Result";
-
-const questions = [
-  {
-    id: 1,
-    text: "The President has, in particular,",
-    boldPart:
-      "taken umbrage with critics of the party who live of the party's largess.",
-    options: [
-      "taken umbrage at critics of the party who live off the party's largess.",
-      "taken umbrage to critics of the party who live off the party's largess.",
-      "taken umbrage on critics of the party who live of the party's largess.",
-      "taken umbrage about critics of the party who live of the party's largess.",
-    ],
-    correctAnswer:
-      "taken umbrage at critics of the party who live off the party's largess.",
-    section: "Sentence Correction",
-  },
-  {
-    id: 2,
-    text: "Despite his repeated attempts,",
-    boldPart:
-      "he failed to convince his superiors about his proposal's merits.",
-    options: [
-      "he failed to convince his superiors of his proposal's merits.",
-      "he failed to convince his superiors for his proposal's merits.",
-      "he failed to convince his superiors with his proposal's merits.",
-      "he failed to convince his superiors on his proposal's merits.",
-    ],
-    correctAnswer:
-      "he failed to convince his superiors of his proposal's merits.",
-    section: "Sentence Correction",
-  },
-  {
-    id: 3,
-    text: "The company's new policy",
-    boldPart:
-      "aims for increasing productivity while maintaining work-life balance.",
-    options: [
-      "aims at increasing productivity while maintaining work-life balance.",
-      "aims to increase productivity while maintaining work-life balance.",
-      "aims on increasing productivity while maintaining work-life balance.",
-      "aims by increasing productivity while maintaining work-life balance.",
-    ],
-    correctAnswer:
-      "aims to increase productivity while maintaining work-life balance.",
-    section: "Sentence Correction",
-  },
-  // Add more questions as needed
-];
+import axios from "axios";
 
 const Test = () => {
+  const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [score, setScore] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
-  const [answers, setAnswers] = useState(Array(questions.length).fill(null));
+  const [answers, setAnswers] = useState([]);
   const [markedQuestions, setMarkedQuestions] = useState(new Set());
   const [timeLeft, setTimeLeft] = useState(7200); // 2 hours in seconds
   const [isTestSubmitted, setIsTestSubmitted] = useState(false);
   const [visitedQuestions, setVisitedQuestions] = useState(new Set([0])); // First question is visited by default
   const [testStartTime, setTestStartTime] = useState(Date.now());
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/test/fetch", { withCredentials: true });
+        const data = response.data;
+        const formattedQuestions = data.testData.map(item => ({
+          id: item.questionId._id,
+          text: item.questionId.question,
+          options: item.questionId.options[0].split(','),
+          marks: item.questionId.marks
+        }));
+        setQuestions(formattedQuestions);
+        setAnswers(Array(formattedQuestions.length).fill(null));
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -73,20 +47,66 @@ const Test = () => {
     return () => clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const saveProgress = async () => {
+      try {
+        const response = await axios.post("http://localhost:5000/api/test/save", {
+          userId: "user-id", // Replace with actual user ID
+          testData: answers.map((answer, index) => ({
+            questionId: questions[index].id,
+            chosenAnswer: answer
+          })),
+          currentDate: new Date().toISOString()
+        }, { withCredentials: true });
+        console.log("Progress saved:", response.data);
+      } catch (error) {
+        console.error("Error saving progress:", error);
+      }
+    };
+
+    const interval = setInterval(saveProgress, 30000); // Save every 30 seconds
+
+    const handleBeforeUnload = (event) => {
+      saveProgress();
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [answers, questions]);
+
   const formatTime = seconds => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleAnswerSelect = answer => {
+  const handleAnswerSelect = async (answer) => {
     setSelectedAnswers({ ...selectedAnswers, [currentQuestion]: answer });
     const newAnswers = [...answers];
     newAnswers[currentQuestion] = answer;
     setAnswers(newAnswers);
+
+    // Save progress when an option is selected
+    try {
+      const response = await axios.post("http://localhost:5000/api/test/save", {
+        userId: "user-id", // Replace with actual user ID
+        testData: newAnswers.map((answer, index) => ({
+          questionId: questions[index].id,
+          chosenAnswer: answer
+        })),
+        currentDate: new Date().toISOString()
+      }, { withCredentials: true });
+      console.log("Progress saved:", response.data);
+    } catch (error) {
+      console.error("Error saving progress:", error);
+    }
 
     // Automatically move to next question after 1 second
     setTimeout(() => {
@@ -211,10 +231,10 @@ const Test = () => {
                 Question {currentQuestion + 1} of {questions.length}
               </div>
               <div className="question-text">
-                {questions[currentQuestion].text}
+                {questions[currentQuestion]?.text}
               </div>
               <div className="options-grid">
-                {questions[currentQuestion].options.map((option, index) => (
+                {questions[currentQuestion]?.options.map((option, index) => (
                   <motion.button
                     key={index}
                     className={`option-button ${

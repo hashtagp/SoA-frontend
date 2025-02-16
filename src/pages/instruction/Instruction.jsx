@@ -1,3 +1,4 @@
+import axios from "axios";
 import "./Instruction.css";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -6,9 +7,23 @@ const Instruction = () => {
   const [isStarting, setIsStarting] = useState(false);
   const Navigate = useNavigate();
 
-  const handleStartTest = () => {
+  const handleStartTest = async() => {
     setIsStarting(true);
-    Navigate("/test");
+    try{
+    const response = await axios.get("http://localhost:5000/api/test/start", {
+      withCredentials: true,
+    });
+    if (response.data.success) {
+      setIsStarting(false);
+      Navigate("/test");
+    } else {
+      alert(response.data.message);
+    }
+  }
+  catch (error) {
+    setIsStarting(false);
+    alert("An error occurred. Please try again later.");
+  }
   };
 
   return (
@@ -35,7 +50,6 @@ const Instruction = () => {
         >
           {isStarting ? "Starting Test..." : "Start Test"}
         </button>
-
       </div>
     </div>
   );

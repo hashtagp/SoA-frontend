@@ -48,6 +48,13 @@
   border-radius: 10px;
 }
 
+.error-message{
+  color: red;
+  font-size: 0.9rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
 .auth-tab {
   padding: 0.75rem 1.5rem;
   border: none;

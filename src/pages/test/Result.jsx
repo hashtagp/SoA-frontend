@@ -1,12 +1,32 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Award, Clock, BarChart2, RefreshCcw, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import '../../styles/Result.css';
 
-const Result = ({ score, totalQuestions, userAnswers, questions, timeSpent, onRetry }) => {
-  const percentage = Math.round((score / totalQuestions) * 100);
-  const minutes = Math.floor(timeSpent / 60);
-  const seconds = timeSpent % 60;
+const Result = ({ onRetry }) => {
+  const [resultData, setResultData] = useState(null);
+
+  useEffect(() => {
+    const fetchResultData = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/test/result', { withCredentials: true });
+        setResultData(response.data);
+      } catch (error) {
+        console.error('Error fetching result data:', error);
+      }
+    };
+
+    fetchResultData();
+  }, []);
+
+  if (!resultData) {
+    return <div>Loading...</div>;
+  }
+
+  const { correctAnswers, totalQuestions } = resultData;
+  const percentage = Math.round((correctAnswers / totalQuestions) * 100);
 
   const getScoreColor = (percentage) => {
     if (percentage >= 80) return '#22c55e';
@@ -23,21 +43,8 @@ const Result = ({ score, totalQuestions, userAnswers, questions, timeSpent, onRe
     return 'Needs Improvement';
   };
 
-  const getAnalytics = () => {
-    let correct = 0;
-    let incorrect = 0;
-    let unattempted = 0;
-
-    userAnswers.forEach((answer, index) => {
-      if (!answer) unattempted++;
-      else if (answer === questions[index].correctAnswer) correct++;
-      else incorrect++;
-    });
-
-    return { correct, incorrect, unattempted };
-  };
-
-  const analytics = getAnalytics();
+  const incorrectAnswers = totalQuestions - correctAnswers;
+  const unattempted = 0; // Assuming all questions were attempted
 
   return (
     <motion.div 
@@ -85,19 +92,6 @@ const Result = ({ score, totalQuestions, userAnswers, questions, timeSpent, onRe
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Clock className="stat-icon" />
-            <div className="stat-content">
-              <h3>Time Taken</h3>
-              <p>{minutes}m {seconds}s</p>
-            </div>
-          </motion.div>
-
-          <motion.div 
-            className="stat-card"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
             <BarChart2 className="stat-icon" />
             <div className="stat-content">
               <h3>Total Questions</h3>
@@ -118,20 +112,20 @@ const Result = ({ score, totalQuestions, userAnswers, questions, timeSpent, onRe
               <CheckCircle className="analytics-icon" />
               <div className="analytics-content">
                 <span className="analytics-label">Correct</span>
-                <span className="analytics-value">{analytics.correct}</span>
+                <span className="analytics-value">{correctAnswers}</span>
               </div>
             </div>
             <div className="analytics-card incorrect">
               <XCircle className="analytics-icon" />
               <div className="analytics-content">
                 <span className="analytics-label">Incorrect</span>
-                <span className="analytics-value">{analytics.incorrect}</span>
+                <span className="analytics-value">{incorrectAnswers}</span>
               </div>
             </div>
             <div className="analytics-card unattempted">
               <div className="analytics-content">
                 <span className="analytics-label">Unattempted</span>
-                <span className="analytics-value">{analytics.unattempted}</span>
+                <span className="analytics-value">{unattempted}</span>
               </div>
             </div>
           </div>
