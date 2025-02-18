@@ -38,10 +38,10 @@ const SignIn = ({ onClose, returnPath }) => {
         }
       );
       
-      if (response.data) {
-        localStorage.setItem('token', response.data.token);
+      if (response.data.success) {
         console.log('Login successful', document.cookie); // Debug cookies
         handleClose();
+        window.location.reload();
       }
     } catch (error) {
       setError(error.response?.data?.message || 'Login failed');

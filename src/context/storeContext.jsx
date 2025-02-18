@@ -1,11 +1,13 @@
 import React, { createContext, useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const StoreContext = createContext();
 
 const StoreProvider = ({ children }) => {
     const [isVerified, setIsVerified] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
     const verifyHomePageVisit = async () => {
         try {
@@ -28,7 +30,19 @@ const StoreProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        verifyHomePageVisit();
+        const initialize = async () => {
+            await verifyHomePageVisit();
+            if (localStorage.getItem("currentPage") === "test") {
+                console.log("test");
+                navigate("/test");
+            }
+            else if(localStorage.getItem('currentPage')==='result'){
+                console.log("result");
+                navigate("/result");
+            }
+        };
+
+        initialize();
     }, []);
 
     return (

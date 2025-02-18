@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Award, Clock, BarChart2, RefreshCcw, CheckCircle, XCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowRight, Award, BarChart2, RefreshCcw, CheckCircle, XCircle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../../styles/Result.css';
 
 const Result = ({ onRetry }) => {
   const [resultData, setResultData] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchResultData = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/test/result', { withCredentials: true });
         setResultData(response.data);
+        localStorage.setItem('currentPage', 'result');
       } catch (error) {
         console.error('Error fetching result data:', error);
       }
@@ -25,7 +27,7 @@ const Result = ({ onRetry }) => {
     return <div>Loading...</div>;
   }
 
-  const { correctAnswers, totalQuestions } = resultData;
+  const { correctAnswers, totalQuestions, unattempted } = resultData;
   const percentage = Math.round((correctAnswers / totalQuestions) * 100);
 
   const getScoreColor = (percentage) => {
@@ -43,8 +45,24 @@ const Result = ({ onRetry }) => {
     return 'Needs Improvement';
   };
 
-  const incorrectAnswers = totalQuestions - correctAnswers;
-  const unattempted = 0; // Assuming all questions were attempted
+  const incorrectAnswers = totalQuestions - correctAnswers - unattempted;
+
+  const handleRetry = async () => {
+    try {
+      const response = await axios.patch('http://localhost:5000/api/test/retry', {
+        newStartTime: new Date().toISOString()
+      }, { withCredentials: true });
+
+      if (response.data.success) {
+        navigate('/test');
+        localStorage.removeItem('currentPage')
+      } else {
+        console.error('Error retrying test:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Error retrying test:', error);
+    }
+  };
 
   return (
     <motion.div 
@@ -134,7 +152,7 @@ const Result = ({ onRetry }) => {
         <div className="action-buttons">
           <motion.button 
             className="retry-button"
-            onClick={onRetry}
+            onClick={handleRetry}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >

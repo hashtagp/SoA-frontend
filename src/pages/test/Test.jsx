@@ -4,6 +4,7 @@ import { Timer, ArrowLeft, ArrowRight, Send } from "lucide-react";
 import "../../styles/Test.css";
 import Result from "./Result";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Test = () => {
   const [questions, setQuestions] = useState([]);
@@ -18,19 +19,49 @@ const Test = () => {
   const [visitedQuestions, setVisitedQuestions] = useState(new Set([0])); // First question is visited by default
   const [testStartTime, setTestStartTime] = useState(Date.now());
 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    localStorage.setItem('currentPage', 'test');
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/test/fetch", { withCredentials: true });
         const data = response.data;
+        console.log(data);
         const formattedQuestions = data.testData.map(item => ({
           id: item.questionId._id,
           text: item.questionId.question,
           options: item.questionId.options[0].split(','),
-          marks: item.questionId.marks
+          marks: item.questionId.marks,
+          chosenAnswer: item.chosenAnswer // Add chosenAnswer to the formatted questions
         }));
         setQuestions(formattedQuestions);
-        setAnswers(Array(formattedQuestions.length).fill(null));
+        const initialAnswers = formattedQuestions.map(question => question.chosenAnswer || null);
+        setAnswers(initialAnswers);
+        setTestStartTime(new Date(data.startTime).getTime());
+        const endTime = new Date(data.endTime).getTime();
+        const currentTime = new Date().getTime();
+        setTimeLeft(Math.floor(Math.max((endTime - currentTime) / 1000, 0))); // Calculate time left in seconds
+
+        const savedCurrentQuestion = localStorage.getItem('currentQuestion');
+        if (savedCurrentQuestion !== null) {
+          setCurrentQuestion(parseInt(savedCurrentQuestion, 10));
+        }
+
+        // Set selectedAnswers with the previously chosen answers
+        const initialSelectedAnswers = {};
+        formattedQuestions.forEach((question, index) => {
+          if (question.chosenAnswer) {
+            initialSelectedAnswers[index] = question.chosenAnswer;
+          }
+        });
+        setSelectedAnswers(initialSelectedAnswers);
+
+        // Set visitedQuestions from the fetched data
+        setVisitedQuestions(new Set(data.visitedQuestions.map(q => formattedQuestions.findIndex(fq => fq.id === q))));
       } catch (error) {
         console.error(error);
       }
@@ -41,7 +72,15 @@ const Test = () => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
+      setTimeLeft(prev => {
+        if (prev > 0) {
+          return prev - 1;
+        } else {
+          clearInterval(timer);
+          handleSubmitTest();
+          return 0;
+        }
+      });
     }, 1000);
 
     return () => clearInterval(timer);
@@ -51,11 +90,11 @@ const Test = () => {
     const saveProgress = async () => {
       try {
         const response = await axios.post("http://localhost:5000/api/test/save", {
-          userId: "user-id", // Replace with actual user ID
           testData: answers.map((answer, index) => ({
             questionId: questions[index].id,
             chosenAnswer: answer
           })),
+          visitedQuestions: Array.from(visitedQuestions).map(index => questions[index].id), // Convert Set to Array of question IDs
           currentDate: new Date().toISOString()
         }, { withCredentials: true });
         console.log("Progress saved:", response.data);
@@ -68,6 +107,7 @@ const Test = () => {
 
     const handleBeforeUnload = (event) => {
       saveProgress();
+      localStorage.setItem('currentQuestion', currentQuestion);
       event.preventDefault();
       event.returnValue = '';
     };
@@ -78,7 +118,7 @@ const Test = () => {
       clearInterval(interval);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [answers, questions]);
+  }, [answers, questions, currentQuestion, visitedQuestions]);
 
   const formatTime = seconds => {
     const hours = Math.floor(seconds / 3600);
@@ -93,6 +133,9 @@ const Test = () => {
     newAnswers[currentQuestion] = answer;
     setAnswers(newAnswers);
 
+    // Update visitedQuestions
+    setVisitedQuestions(prev => new Set([...prev, currentQuestion]));
+
     // Save progress when an option is selected
     try {
       const response = await axios.post("http://localhost:5000/api/test/save", {
@@ -101,6 +144,7 @@ const Test = () => {
           questionId: questions[index].id,
           chosenAnswer: answer
         })),
+        visitedQuestions: Array.from(visitedQuestions).map(index => questions[index].id), // Convert Set to Array of question IDs
         currentDate: new Date().toISOString()
       }, { withCredentials: true });
       console.log("Progress saved:", response.data);
@@ -128,7 +172,7 @@ const Test = () => {
     setCurrentQuestion(nextIndex);
     setSelectedAnswers({
       ...selectedAnswers,
-      [currentQuestion]: answers[nextIndex],
+      [nextIndex]: answers[nextIndex],
     });
     setVisitedQuestions(prev => new Set([...prev, nextIndex]));
   };
@@ -137,15 +181,15 @@ const Test = () => {
     setCurrentQuestion(index);
     setSelectedAnswers({
       ...selectedAnswers,
-      [currentQuestion]: answers[index],
+      [index]: answers[index],
     });
     setVisitedQuestions(prev => new Set([...prev, index]));
   };
 
   const getQuestionStatus = index => {
+    if (currentQuestion === index) return "current";
     if (!visitedQuestions.has(index)) return "not-visited";
     if (answers[index]) return "answered";
-    if (markedQuestions.has(index)) return "marked";
     return "not-answered";
   };
 
@@ -171,11 +215,13 @@ const Test = () => {
         if (!confirmSubmit) return;
       }
       setIsTestSubmitted(true);
+      localStorage.removeItem('currentQuestion');
       // Calculate final score
       const finalScore = answers.reduce((score, answer, index) => {
         return answer === questions[index].correctAnswer ? score + 1 : score;
       }, 0);
       setScore(finalScore);
+      navigate('/result');
     }
   };
 
@@ -212,9 +258,6 @@ const Test = () => {
         <div className="timer-container">
           <Timer className="timer-icon" size={20} />
           <span className="timer-text">{formatTime(timeLeft)}</span>
-        </div>
-        <div className="question-info">
-          Question {currentQuestion + 1} of {questions.length}
         </div>
       </div>
 
@@ -265,13 +308,7 @@ const Test = () => {
                 key={index}
                 className={`question-number-btn ${
                   currentQuestion === index ? "current" : ""
-                } ${
-                  answers[index]
-                    ? "answered"
-                    : visitedQuestions.has(index)
-                    ? "not-answered"
-                    : ""
-                }`}
+                } ${getQuestionStatus(index)}`}
                 onClick={() => jumpToQuestion(index)}
               >
                 {index + 1}

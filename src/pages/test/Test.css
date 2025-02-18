@@ -862,6 +862,16 @@ body {
     flex-direction: column;
   }
 
+  .text-header{
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 15px;
+    margin-bottom: 10px;
+  }
+
   .sidebar {
     width: 100%;
     border-right: none;
@@ -870,6 +880,13 @@ body {
 
   .sidebar-content {
     max-height: 300px;
+  }
+
+  .navigation-buttons{
+    flex-direction: row;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    margin-top: 1rem;
   }
 }
 
