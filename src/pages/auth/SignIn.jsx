@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -14,6 +15,10 @@ const SignIn = ({ onClose, returnPath }) => {
     confirmPassword: ''
   });
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    setError('');
+  }, [isSignIn]);
 
   const handleInputChange = (e) => {
     setFormData({
